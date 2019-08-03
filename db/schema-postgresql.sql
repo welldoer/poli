@@ -1,12 +1,13 @@
--- v0.8.0 for PostgreSQL
+-- v0.9.1 for PostgreSQL
 DROP TABLE IF EXISTS p_group_report;
 DROP TABLE IF EXISTS p_component;
 DROP TABLE IF EXISTS p_report;
 DROP TABLE IF EXISTS p_datasource;
+DROP TABLE IF EXISTS p_user_attribute;
+DROP TABLE IF EXISTS p_canned_report;
 DROP TABLE IF EXISTS p_group_user;
 DROP TABLE IF EXISTS p_user;
 DROP TABLE IF EXISTS p_group;
-DROP TABLE IF EXISTS p_canned_report;
 
 CREATE TABLE
 IF NOT EXISTS p_datasource (
@@ -23,7 +24,7 @@ CREATE TABLE
 IF NOT EXISTS p_report (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR NOT NULL,
-    style JSON
+    style VARCHAR
 );
 
 CREATE TABLE
@@ -39,11 +40,10 @@ IF NOT EXISTS p_component (
     type VARCHAR NOT NULL,
     sub_type VARCHAR,
     sql_query VARCHAR,
-    data JSON,
-    drill_through JSON,
-    style JSON,
-    FOREIGN KEY (report_id) REFERENCES p_report(id),
-    FOREIGN KEY (datasource_id) REFERENCES p_datasource(id)
+    data VARCHAR,
+    drill_through VARCHAR,
+    style VARCHAR,
+    FOREIGN KEY (report_id) REFERENCES p_report(id)
 );
 
 CREATE TABLE 
@@ -87,9 +87,17 @@ CREATE TABLE
 IF NOT EXISTS p_canned_report (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    created_at INTEGER NOT NULL,
+    created_at BIGINT NOT NULL,
     name VARCHAR NOT NULL,
-    data JSON,
+    data VARCHAR,
+    FOREIGN KEY (user_id) REFERENCES p_user(id)
+);
+
+CREATE TABLE
+IF NOT EXISTS p_user_attribute (
+    user_id INTEGER NOT NULL,
+    attr_key VARCHAR NOT NULL,
+    attr_value VARCHAR,
     FOREIGN KEY (user_id) REFERENCES p_user(id)
 );
 

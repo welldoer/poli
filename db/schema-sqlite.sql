@@ -1,12 +1,13 @@
--- v0.8.0 for SQLite
+-- v0.9.1 for SQLite
 DROP TABLE IF EXISTS p_group_report;
 DROP TABLE IF EXISTS p_component;
 DROP TABLE IF EXISTS p_report;
 DROP TABLE IF EXISTS p_datasource;
+DROP TABLE IF EXISTS p_user_attribute;
+DROP TABLE IF EXISTS p_canned_report;
 DROP TABLE IF EXISTS p_group_user;
 DROP TABLE IF EXISTS p_user;
 DROP TABLE IF EXISTS p_group;
-DROP TABLE IF EXISTS p_canned_report;
 
 CREATE TABLE
 IF NOT EXISTS p_datasource (
@@ -42,8 +43,7 @@ IF NOT EXISTS p_component (
     data TEXT,
     drill_through TEXT,
     style TEXT,
-    FOREIGN KEY (report_id) REFERENCES p_report(id),
-    FOREIGN KEY (datasource_id) REFERENCES p_datasource(id)
+    FOREIGN KEY (report_id) REFERENCES p_report(id)
 );
 
 CREATE TABLE 
@@ -91,6 +91,15 @@ IF NOT EXISTS p_canned_report (
     created_at INTEGER NOT NULL,
     name TEXT NOT NULL,
     data TEXT,
+    FOREIGN KEY (user_id) REFERENCES p_user(id)
+);
+
+-- table added in v0.9.0
+CREATE TABLE
+IF NOT EXISTS p_user_attribute (
+    user_id INTEGER NOT NULL,
+    attr_key TEXT NOT NULL,
+    attr_value TEXT,
     FOREIGN KEY (user_id) REFERENCES p_user(id)
 );
 

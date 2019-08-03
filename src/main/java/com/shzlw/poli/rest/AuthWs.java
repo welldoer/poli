@@ -50,6 +50,7 @@ public class AuthWs {
         String oldSessionKey = user.getSessionKey();
         String newSessionKey = getNewSessionKey();
         userDao.updateSessionKey(user.getId(), newSessionKey);
+        user.setUserAttributes(userDao.findUserAttributes(user.getId()));
         userService.newOrUpdateUser(user, oldSessionKey, newSessionKey);
 
         Cookie sessionKeyCookie = new Cookie(Constants.SESSION_KEY, newSessionKey);
@@ -72,6 +73,7 @@ public class AuthWs {
             return LoginResponse.ofError(INVALID_USERNAME_PASSWORD);
         }
 
+        user.setUserAttributes(userDao.findUserAttributes(user.getId()));
         userService.newOrUpdateUser(user, user.getSessionKey(), sessionKey);
         return LoginResponse.ofSucess(user.getUsername(), user.getSysRole(), false);
     }

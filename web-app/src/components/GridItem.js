@@ -83,37 +83,7 @@ class GridItem extends React.Component {
       return;
     }
 
-    this.convertCsv(title, columns, queryResultData);
-  }
-
-  convertCsv = (title = 'poli', columns = [], data = []) => {
-    let csvHeader = '';
-    for (let i = 0; i < columns.length; i++) {
-      if (i !== 0) {
-          csvHeader += ',';
-      }
-      csvHeader += columns[i].name;
-    }
-
-    let csvBody = '';
-    for (let i = 0; i < data.length; i++) {
-        const row = Object.values(data[i]);
-        csvBody += row.join(',') + '\r\n';
-    } 
-
-    const csvData = csvHeader + '\r\n' + csvBody;
-    const filename = title + '.csv';
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    if (link.download !== undefined) { 
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    this.props.onComponentCsvExport(title, columns, queryResultData);
   }
 
   removeComponent = (componentId) => {
@@ -229,7 +199,8 @@ class GridItem extends React.Component {
     if (type === Constants.CHART) {
       if (subType === Constants.TABLE) {
         const { 
-          defaultPageSize = 10
+          defaultPageSize = 10,
+          showPagination = true
         } = data;
         componentItem = (
           <Table
@@ -237,6 +208,7 @@ class GridItem extends React.Component {
             columns={columns}
             defaultPageSize={defaultPageSize}
             drillThrough={drillThrough}
+            showPagination={showPagination}
             onTableTdClick={this.onTableTdClick}
           />
         );
@@ -462,11 +434,11 @@ class GridItem extends React.Component {
           </div>
         )}
 
-        {readModeButtonGroup}
-        
         <div className="grid-box-content" style={contentStyle}>
           {this.renderComponentContent()}
         </div>
+
+        {readModeButtonGroup}
 
         { isEditMode && (
           <GridResizable 

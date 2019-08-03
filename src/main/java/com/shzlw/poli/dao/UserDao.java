@@ -1,6 +1,7 @@
 package com.shzlw.poli.dao;
 
 import com.shzlw.poli.model.User;
+import com.shzlw.poli.model.UserAttribute;
 import com.shzlw.poli.util.CommonUtil;
 import com.shzlw.poli.util.PasswordUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -153,6 +154,21 @@ public class UserDao {
         return jt.queryForList(sql, new Object[]{ userId }, Long.class);
     }
 
+    public List<Long> findGroupUsers(long groupId) {
+        String sql = "SELECT user_id FROM p_group_user WHERE group_id = ?";
+        return jt.queryForList(sql, new Object[]{ groupId }, Long.class);
+    }
+
+    public List<UserAttribute> findUserAttributes(long userId) {
+        String sql = "SELECT attr_key, attr_value FROM p_user_attribute WHERE user_id = ?";
+        return jt.query(sql, new Object[]{ userId }, (rs, i) -> {
+            UserAttribute r = new UserAttribute();
+            r.setAttrKey(rs.getString(UserAttribute.ATTR_KEY));
+            r.setAttrValue(rs.getString(UserAttribute.ATTR_VALUE));
+            return r;
+        });
+    }
+
     public long insertUser(String username, String name, String rawTempPassword, String sysRole) {
         String encryptedPassword = PasswordUtil.getMd5Hash(rawTempPassword);
         String sql = "INSERT INTO p_user(username, name, temp_password, sys_role) "
@@ -164,7 +180,7 @@ public class UserDao {
         params.addValue(User.SYS_ROLE, sysRole);
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        npjt.update(sql, params, keyHolder, new String[] { User.ID});
+        npjt.update(sql, params, keyHolder, new String[] { User.ID });
         return keyHolder.getKey().longValue();
     }
 
@@ -180,6 +196,23 @@ public class UserDao {
             @Override
             public int getBatchSize() {
                 return userGroups.size();
+            }
+        });
+    }
+
+    public void insertUserAttributes(long userId, List<UserAttribute> userAttributes) {
+        String sql = "INSERT INTO p_user_attribute(user_id, attr_key, attr_value) VALUES(?, ?, ?)";
+        jt.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, userId);
+                ps.setString(2, userAttributes.get(i).getAttrKey());
+                ps.setString(3, userAttributes.get(i).getAttrValue());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return userAttributes.size();
             }
         });
     }
@@ -227,6 +260,11 @@ public class UserDao {
 
     public int deleteUserGroups(long userId) {
         String sql = "DELETE FROM p_group_user WHERE user_id=?";
+        return jt.update(sql, new Object[]{ userId });
+    }
+
+    public int deleteUserAttributes(long userId) {
+        String sql = "DELETE FROM p_user_attribute WHERE user_id=?";
         return jt.update(sql, new Object[]{ userId });
     }
 

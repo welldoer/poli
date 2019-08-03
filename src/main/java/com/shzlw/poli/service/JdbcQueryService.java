@@ -8,7 +8,7 @@ import com.shzlw.poli.dto.Column;
 import com.shzlw.poli.dto.FilterParameter;
 import com.shzlw.poli.dto.QueryResult;
 import com.shzlw.poli.dto.Table;
-import com.shzlw.poli.model.JdbcDataSource;
+import com.shzlw.poli.util.CommonUtil;
 import com.shzlw.poli.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +26,8 @@ import java.lang.reflect.Field;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 
 @Service
 public class JdbcQueryService {
@@ -92,20 +92,39 @@ public class JdbcQueryService {
         }
     }
 
-    public QueryResult queryComponentByParams(DataSource dataSource, String sql, List<FilterParameter> filterParams) {
+    public QueryResult queryComponentByParams(
+            DataSource dataSource,
+            String sql,
+            List<FilterParameter> filterParams
+    ) {
         if (dataSource == null) {
             return QueryResult.ofError(Constants.ERROR_NO_DATA_SOURCE_FOUND);
         } else if (StringUtils.isEmpty(sql)) {
             return QueryResult.ofError(Constants.ERROR_EMPTY_SQL_QUERY);
         }
 
-        NamedParameterJdbcTemplate npTemplate = new NamedParameterJdbcTemplate(dataSource);
+        NamedParameterJdbcTemplate npjt = new NamedParameterJdbcTemplate(dataSource);
         Map<String, Object> namedParameters = getNamedParameters(filterParams);
-        String parsedSql = parseSqlStatementWithParams(sql, namedParameters);
 
+        // Handle multiple SQL statements.
+        // If there are multiple sql statements, only return query results from the last query.
+        List<String> sqls = CommonUtil.getQueryStatements(sql);
+        int preQueryNumber = sqls.size() - 1;
+        if (appProperties.getAllowMultipleQueryStatements()) {
+            for (int i = 0; i < preQueryNumber; i++) {
+                String parsedSql = parseSqlStatementWithParams(sqls.get(i), namedParameters);
+                npjt.execute(parsedSql, (ps) -> ps.execute());
+            }
+        }
+
+        String parsedSql = parseSqlStatementWithParams(sqls.get(preQueryNumber), namedParameters);
+        return executeQuery(npjt, parsedSql, namedParameters);
+    }
+
+    private QueryResult executeQuery(NamedParameterJdbcTemplate npjt, String sql, Map<String, Object> namedParameters) {
         int maxQueryRecords = appProperties.getMaximumQueryRecords();
 
-        QueryResult result = npTemplate.query(parsedSql, namedParameters, new ResultSetExtractor<QueryResult>() {
+        QueryResult result = npjt.query(sql, namedParameters, new ResultSetExtractor<QueryResult>() {
             @Nullable
             @Override
             public QueryResult extractData(ResultSet rs) {
@@ -149,7 +168,6 @@ public class JdbcQueryService {
 
         return result;
     }
-
 
     public static String parseSqlStatementWithParams(String sql, Map<String, Object> params) {
         StringBuilder sb = new StringBuilder();
@@ -201,7 +219,9 @@ public class JdbcQueryService {
                 String name = param.getParam();
                 String value = param.getValue();
 
-                if (type.equals(Constants.FILTER_TYPE_SLICER)) {
+                if (type.equals(Constants.FILTER_TYPE_USER_ATTRIBUTE)) {
+                    namedParameters.put(name, value);
+                } else if (type.equals(Constants.FILTER_TYPE_SLICER)) {
                     String remark = param.getRemark();
                     if (remark == null) {
                         try {

@@ -418,17 +418,28 @@ class ComponentEditPanel extends React.Component {
     let chartConfigPanel;
     if (subType === Constants.TABLE) {
       const {
-        defaultPageSize = 10
+        defaultPageSize = 10,
+        showPagination = true
       } = data;
       chartConfigPanel = (
         <div>
-          <label>{t('Default Page Size')}</label>
-          <Select
-            name={'defaultPageSize'}
-            value={defaultPageSize}
-            onChange={this.handleComponentDataChange}
-            options={TABLE_DEFAULT_PAGE_SIZES}
-          />
+          <label>{t('Show Pagination')}</label>
+          <div style={{marginBottom: '8px'}}>
+            <Checkbox name="showPagination" value="" checked={showPagination} onChange={this.handleComponentDataChange} />
+          </div>
+
+          {showPagination && (
+            <div>
+              <label>{t('Default Page Size')}</label>
+              <Select
+                name={'defaultPageSize'}
+                value={defaultPageSize}
+                onChange={this.handleComponentDataChange}
+                options={TABLE_DEFAULT_PAGE_SIZES}
+              />
+            </div>
+          )}
+          
         </div>
       );
     } else if (subType === Constants.PIE || subType === Constants.TREEMAP) {
@@ -472,12 +483,12 @@ class ComponentEditPanel extends React.Component {
         <div>
           {seriesChartPanel}
 
-          <label>{t('Is smooth')}</label>
+          <label>{t('Is Smooth')}</label>
           <div style={{marginBottom: '8px'}}>
             <Checkbox name="isSmooth" value="" checked={isSmooth} onChange={this.handleComponentDataChange} />
           </div>
 
-          <label>{t('Show all axis labels')}</label>
+          <label>{t('Show All Axis Labels')}</label>
           <div style={{marginBottom: '8px'}}>
             <Checkbox name="showAllAxisLabels" value="" checked={showAllAxisLabels} onChange={this.handleComponentDataChange} />
           </div>
@@ -865,9 +876,12 @@ class ComponentEditPanel extends React.Component {
     const queryTitle = showSchema ? 'Schema' : 'SQL Query'; 
     const schemaButtonValue = showSchema ? 'Edit Query' : 'Show Schema';
 
-    const componentTypes = Constants.COMPONENT_TYPES.map(component =>
-      t(component)
-    );
+    const componentTypes = Constants.COMPONENT_TYPES.map(component => {
+      return {
+        display: t(component),
+        value: component
+      }
+    });
 
     return (
       <div>

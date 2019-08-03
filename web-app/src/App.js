@@ -8,7 +8,7 @@ import {
   faTv, faPlug, faUser, faSignOutAlt, faCompress, faExpandArrowsAlt,
   faFileExport, faFileCsv, faCircleNotch, faSearch, faSave, 
   faCalendarPlus, faFilter, faExternalLinkAlt, faCheckSquare, 
-  faLongArrowAltRight, faWrench, faArchive
+  faLongArrowAltRight, faWrench, faArchive, faFileDownload
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faSquare as farSquare
@@ -30,7 +30,7 @@ library.add(faChalkboard, faDatabase, faUsersCog, faPlus, faTimes,
   faTv, faPlug, faUser, faSignOutAlt, faCompress, faExpandArrowsAlt,
   faFileExport, faFileCsv, faCircleNotch, faSearch, faSave, 
   faCalendarPlus, faFilter, faExternalLinkAlt, faCheckSquare,
-  faLongArrowAltRight, faWrench, farSquare, faArchive
+  faLongArrowAltRight, faWrench, farSquare, faArchive, faFileDownload
 );
 
 class App extends React.Component {
@@ -72,8 +72,9 @@ class App extends React.Component {
       return;
     }
 
+    const isFullScreenView = pathname.indexOf('/workspace/report/fullscreen') !== -1;
     const rememberMeConfig = localStorage.getItem(Constants.REMEMBERME);
-    const rememberMe = rememberMeConfig && rememberMeConfig === Constants.YES;
+    const rememberMe = (rememberMeConfig && rememberMeConfig === Constants.YES) || isFullScreenView;
 
     const {
       sysRole,
